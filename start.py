@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 import cPickle
-import librosa
 import numpy as np
-from scipy.spatial.distance import euclidean
-from scipy.spatial.distance import cosine
 from sklearn import preprocessing
-from sklearn.metrics.pairwise import manhattan_distances
 from sklearn.mixture import GMM
 import os
 import thread
@@ -22,6 +18,7 @@ def get_MFCC(file):
     features = preprocessing.scale(features)
     return features
 
+
 def start_rec():
     import pyaudio
     import wave
@@ -31,7 +28,7 @@ def start_rec():
     RATE = 44100
     CHUNK = 1024
     RECORD_SECONDS = 5
-    WAVE_OUTPUT_FILENAME = "file.wav"
+    WAVE_OUTPUT_FILENAME = "data/file.wav"
 
     audio = pyaudio.PyAudio()
 
@@ -92,12 +89,10 @@ def extract_features(audio, rate):
     return combined
 
 
-
-
 def create_model():
 
-    alex = ['ak.wav', 'ak2.wav', 'ak_cut.wav']
-    kvar = ['kv.wav', 'kv2.wav', 'kv_cut.wav']
+    alex = ['data/ak.wav', 'data/ak2.wav', 'data/ak_cut.wav']
+    kvar = ['data/kv.wav', 'data/kv2.wav', 'data/kv_cut.wav']
 
     features = np.asarray(())
     for i in alex:
@@ -114,7 +109,7 @@ def create_model():
     gmm = GMM(n_components=16, n_iter=200, covariance_type='diag', n_init=3)
     gmm.fit(features)
 
-    picklefile = 'alex' + ".gmm"
+    picklefile = 'data/alex' + ".gmm"
     cPickle.dump(gmm, open(picklefile, 'w'))
     print '+ modeling completed for speaker:', picklefile, " with data point = ", features.shape
 
@@ -134,20 +129,15 @@ def create_model():
     gmm = GMM(n_components=16, n_iter=200, covariance_type='diag', n_init=3)
     gmm.fit(features)
 
-    picklefile = 'kvar' + ".gmm"
+    picklefile = 'data/kvar' + ".gmm"
     cPickle.dump(gmm, open(picklefile, 'w'))
     print '+ modeling completed for speaker:', picklefile, " with data point = ", features.shape
 
 
-
-
-
-
-
 def get_voice():
-    models = [cPickle.load(open(fname, 'r')) for fname in ['alex.gmm', 'kvar.gmm']]
+    models = [cPickle.load(open(fname, 'r')) for fname in ['data/alex.gmm', 'data/kvar.gmm']]
 
-    sr, audio = read('file.wav')
+    sr, audio = read('data/file.wav')
     vector = extract_features(audio, sr)
     log_likelihood = np.zeros(len(models))
 
@@ -160,27 +150,28 @@ def get_voice():
 
     if winner == 1:
         print('kvar')
-        thread.start_new_thread( start_play, ('vera_kv.mp3', ))
+        thread.start_new_thread( start_play, ('data/vera_kv.mp3', ))
     else:
         print('alex')
-        thread.start_new_thread( start_play, ('vera_ak.mp3', ))
+        thread.start_new_thread( start_play, ('data/vera_ak.mp3', ))
 
 
 
 def start_play(file):
     os.system('ffplay ' + file)
 
-print('start')
-time.sleep(4)
-thread.start_new_thread( start_play, ('kv_5.wav', ))
-start_rec()
-get_voice()
 
+if __name__ == "__main__":
+    print('start')
+    time.sleep(4)
+    thread.start_new_thread( start_play, ('data/kv_5.wav', ))
+    start_rec()
+    get_voice()
 
-time.sleep(6)
+    time.sleep(6)
 
-thread.start_new_thread( start_play, ('ak_5.wav', ))
-start_rec()
-get_voice()
+    thread.start_new_thread( start_play, ('data/ak_5.wav', ))
+    start_rec()
+    get_voice()
 
 
