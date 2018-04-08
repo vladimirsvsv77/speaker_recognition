@@ -5,5 +5,5 @@
 Run the following command:
 
 ```
-python
+python start.py
 ```
